@@ -7,15 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import com.dmytrodanylyk.R
 import kotlinx.android.synthetic.main.fragment_button.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.Main
+import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 
 class LaunchTimeoutFragment : Fragment() {
 
-    private val uiContext: CoroutineContext = Dispatchers.Main
+    private val uiDispatcher: CoroutineDispatcher = Dispatchers.Main
     private val dataProvider = DataProvider()
     private lateinit var job: Job
 
@@ -43,10 +42,10 @@ class LaunchTimeoutFragment : Fragment() {
         job.cancel()
     }
 
-    private fun loadData() = GlobalScope.launch(uiContext + job) {
+    private fun loadData() = GlobalScope.launch(uiDispatcher + job) {
         showLoading()
 
-        val result = withTimeoutOrNull(1, TimeUnit.SECONDS) { dataProvider.loadData() }
+        val result = withTimeoutOrNull(TimeUnit.SECONDS.toMillis(1)) { dataProvider.loadData() }
 
         showText(result ?: "Timeout")
         hideLoading()
@@ -64,10 +63,10 @@ class LaunchTimeoutFragment : Fragment() {
         textView.text = data
     }
 
-    class DataProvider(private val context: CoroutineContext = Dispatchers.IO) {
+    class DataProvider(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) {
 
-        suspend fun loadData(): String = withContext(context) {
-            delay(2, TimeUnit.SECONDS) // imitate long running operation
+        suspend fun loadData(): String = withContext(dispatcher) {
+            delay(TimeUnit.SECONDS.toMillis(2)) // imitate long running operation
             "Data is available: ${Random().nextInt()}"
         }
     }

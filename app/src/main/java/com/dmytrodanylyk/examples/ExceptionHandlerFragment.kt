@@ -7,15 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import com.dmytrodanylyk.R
 import kotlinx.android.synthetic.main.fragment_button.*
-import kotlinx.coroutines.experimental.*
-import kotlinx.coroutines.experimental.android.Main
+import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlin.coroutines.CoroutineContext
 
 class ExceptionHandlerFragment : Fragment() {
 
-    private val uiContext: CoroutineContext = Dispatchers.Main
+    private val uiDispatcher: CoroutineDispatcher = Dispatchers.Main
     private val dataProvider = DataProvider()
     private lateinit var job: Job
 
@@ -50,7 +50,7 @@ class ExceptionHandlerFragment : Fragment() {
     }
 
     // we can attach CoroutineExceptionHandler to parent context
-    private fun loadData() = GlobalScope.launch(uiContext + exceptionHandler + job) {
+    private fun loadData() = GlobalScope.launch(uiDispatcher + exceptionHandler + job) {
         showLoading()
 
         val result = dataProvider.loadData()
@@ -71,10 +71,10 @@ class ExceptionHandlerFragment : Fragment() {
         textView.text = data
     }
 
-    class DataProvider(private val context: CoroutineContext = Dispatchers.IO) {
+    class DataProvider(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) {
 
-        suspend fun loadData(): String = withContext(context) {
-            delay(2, TimeUnit.SECONDS) // imitate long running operation
+        suspend fun loadData(): String = withContext(dispatcher) {
+            delay(TimeUnit.SECONDS.toMillis(2)) // imitate long running operation
             mayThrowException()
             "Data is available: ${Random().nextInt()}"
         }
